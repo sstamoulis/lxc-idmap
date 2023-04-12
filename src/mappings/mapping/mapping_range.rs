@@ -2,7 +2,7 @@ mod new_mapping_range_error;
 mod parse_mapping_range_error;
 
 use std::{
-    ops::{Deref, Range},
+    ops::{Deref, DerefMut, Range},
     str::FromStr,
 };
 
@@ -45,6 +45,12 @@ impl Deref for MappingRange {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for MappingRange {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
