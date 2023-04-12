@@ -1,8 +1,12 @@
 [package]
 name = "lxc-idmap"
-authors = ["Stathis Stamoulis <sstamoulis2010@gail.com>"]
+authors = ["Stathis Stamoulis <sstamoulis2010@gmail.com>"]
 description = "lxc-idmap is a utility that generates the configuration needed to map the provided UIDs and GIDs between the host and a lxc container"
-version = "0.1.0"
+license = "MIT"
+repository = "https://github.com/sstamoulis/lxc-idmap"
+keywords = ["lxc","idmap","proxmox","container"]
+categories = ["command-line-utilities"]
+version = "0.7.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
