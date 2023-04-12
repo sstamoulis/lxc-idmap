@@ -38,6 +38,51 @@ impl Mappings {
         }
         Mappings(stack)
     }
+
+    /// Adds missing mappings to both ends and between provided mappings
+    /// so that mappings are provided for the container's IDs from 0 up to and including 65535.
+    ///
+    /// For more information reference https://linuxcontainers.org/lxd/docs/latest/userns-idmap/
+    pub fn with_missing(self) -> Self {
+        let mut host_start = 1_000_000; // TODO: get this value from container or global lxc config
+        let mut iter = self.0.into_iter();
+        let mut mappings = Vec::new();
+        if let Some(mut last_m) = iter.next() {
+            if last_m.ct_start > 0 {
+                mappings.push(Mapping {
+                    ct_start: 0,
+                    host_start,
+                    count: last_m.ct_start,
+                });
+                host_start += last_m.ct_start;
+            }
+            mappings.push(last_m.clone());
+            host_start += last_m.count;
+            for m in iter {
+                if m.ct_start > last_m.ct_end() {
+                    let count = m.ct_start - last_m.ct_end();
+                    mappings.push(Mapping {
+                        ct_start: last_m.ct_end(),
+                        host_start,
+                        count,
+                    });
+                    host_start += count;
+                }
+                last_m = m.clone();
+                mappings.push(m);
+                host_start += last_m.count;
+            }
+            const CT_END: u32 = 65_535;
+            if last_m.ct_end() < CT_END {
+                mappings.push(Mapping {
+                    ct_start: last_m.ct_end(),
+                    host_start,
+                    count: CT_END - last_m.ct_end() + 1,
+                })
+            }
+        }
+        Self(mappings)
+    }
 }
 
 impl Deref for Mappings {

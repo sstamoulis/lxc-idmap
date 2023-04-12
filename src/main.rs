@@ -52,15 +52,39 @@ fn main() {
         m.extend(cli.mappings);
         Mappings::from(m)
     };
-
     if cli.debug {
-        eprintln!("Mappings\n");
+        eprintln!("Mappings provided");
         if !uid_mappings.is_empty() {
             eprintln!("  UID: {}", uid_mappings);
         }
         if !gid_mappings.is_empty() {
             eprintln!("  GID: {}", gid_mappings);
         }
+    }
+
+    let uid_mappings = uid_mappings.with_missing();
+    let gid_mappings = gid_mappings.with_missing();
+
+    if cli.debug {
+        eprintln!("Mappings calculated");
+        if !uid_mappings.is_empty() {
+            eprintln!("  UID: {}", uid_mappings);
+        }
+        if !gid_mappings.is_empty() {
+            eprintln!("  GID: {}", gid_mappings);
+        }
+    }
+
+    println!(
+        "# ct.conf\n\
+         # UID mappings"
+    );
+    for m in uid_mappings.iter() {
+        println!("lxc.idmap = u {} {} {}", m.ct_start, m.host_start, m.count);
+    }
+    println!("# GID mappings");
+    for m in gid_mappings.iter() {
+        println!("lxc.idmap = g {} {} {}", m.ct_start, m.host_start, m.count);
     }
 }
 
