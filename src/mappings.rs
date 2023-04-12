@@ -43,8 +43,7 @@ impl Mappings {
     /// so that mappings are provided for the container's IDs from 0 up to and including 65535.
     ///
     /// For more information reference https://linuxcontainers.org/lxd/docs/latest/userns-idmap/
-    pub fn with_missing(self) -> Self {
-        let mut host_start = 1_000_000; // TODO: get this value from container or global lxc config
+    pub fn with_missing(self, mut host_start: u32) -> Self {
         let mut iter = self.0.into_iter();
         let mut mappings = Vec::new();
         if let Some(mut last_m) = iter.next() {

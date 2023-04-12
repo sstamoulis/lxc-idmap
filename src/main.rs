@@ -1,3 +1,4 @@
+mod externals;
 mod mappings;
 
 use clap::{arg, command, Parser};
@@ -62,11 +63,12 @@ fn main() {
         }
     }
 
-    let uid_mappings = uid_mappings.with_missing();
-    let gid_mappings = gid_mappings.with_missing();
+    let host_start = 100000;
+    let uid_mappings = uid_mappings.with_missing(host_start);
+    let gid_mappings = gid_mappings.with_missing(host_start);
 
     if cli.debug {
-        eprintln!("Mappings calculated");
+        eprintln!("\nMappings calculated");
         if !uid_mappings.is_empty() {
             eprintln!("  UID: {}", uid_mappings);
         }
@@ -76,15 +78,42 @@ fn main() {
     }
 
     println!(
-        "# ct.conf\n\
-         # UID mappings"
+        "\n\
+         # ct.conf"
     );
-    for m in uid_mappings.iter() {
-        println!("lxc.idmap = u {} {} {}", m.ct_start, m.host_start, m.count);
+    if !uid_mappings.is_empty() {
+        println!("# UID mappings");
+        for m in uid_mappings.iter() {
+            println!("lxc.idmap = u {} {} {}", m.ct_start, m.host_start, m.count);
+        }
     }
-    println!("# GID mappings");
-    for m in gid_mappings.iter() {
-        println!("lxc.idmap = g {} {} {}", m.ct_start, m.host_start, m.count);
+    if !gid_mappings.is_empty() {
+        println!("# GID mappings");
+        for m in gid_mappings.iter() {
+            println!("lxc.idmap = g {} {} {}", m.ct_start, m.host_start, m.count);
+        }
+    }
+
+    let current_user_uid = externals::geteuid();
+    if !uid_mappings.is_empty() {
+        println!(
+            "\n\
+             #/etc/subuid"
+        );
+        println!("{current_user_uid}:{host_start}:65536");
+        for m in uid_mappings.iter().filter(|m| m.host_start < host_start) {
+            println!("{current_user_uid}:{}:{}", m.host_start, m.count);
+        }
+    }
+    if !gid_mappings.is_empty() {
+        println!(
+            "\n\
+             #/etc/subgid"
+        );
+        println!("{current_user_uid}:{host_start}:65536");
+        for m in gid_mappings.iter().filter(|m| m.host_start < host_start) {
+            println!("{current_user_uid}:{}:{}", m.host_start, m.count);
+        }
     }
 }
 
