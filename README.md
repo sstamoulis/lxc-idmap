@@ -38,3 +38,27 @@ If HOST_ID_END is not provided it defaults to HOST_ID_START + CT_ID_END - CT_ID_
 
 All range bounds are inclusive.
 ```
+
+## Example
+
+```
+$ lxc-idmap 1005
+
+# ct.conf
+# UID mappings
+lxc.idmap = u 0 100000 1005
+lxc.idmap = u 1005 1005 1
+lxc.idmap = u 1006 101006 64530
+# GID mappings
+lxc.idmap = g 0 100000 1005
+lxc.idmap = g 1005 1005 1
+lxc.idmap = g 1006 101006 64530
+
+#/etc/subuid
+1000:100000:65536
+1000:1005:1
+
+#/etc/subgid
+1000:100000:65536
+1000:1005:1
+```
