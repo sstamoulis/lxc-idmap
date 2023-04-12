@@ -10,6 +10,12 @@ pub struct Mapping {
     pub count: u32,
 }
 
+impl Mapping {
+    pub fn ct_end(&self) -> u32 {
+        self.ct_start + self.count
+    }
+}
+
 impl std::fmt::Display for Mapping {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.ct_start)?;
