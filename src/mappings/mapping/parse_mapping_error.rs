@@ -1,5 +1,3 @@
-use super::mapping_range::{NewMappingRangeError, ParseMappingRangeError};
-
 #[derive(Debug)]
 pub struct ParseMappingError {
     pub message: String,
@@ -15,22 +13,6 @@ impl From<std::num::ParseIntError> for ParseMappingError {
     fn from(value: std::num::ParseIntError) -> Self {
         Self {
             message: value.to_string(),
-        }
-    }
-}
-
-impl From<NewMappingRangeError> for ParseMappingError {
-    fn from(value: NewMappingRangeError) -> Self {
-        Self {
-            message: value.to_string(),
-        }
-    }
-}
-
-impl From<ParseMappingRangeError> for ParseMappingError {
-    fn from(value: ParseMappingRangeError) -> Self {
-        Self {
-            message: value.message,
         }
     }
 }

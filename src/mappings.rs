@@ -8,34 +8,35 @@ pub use mapping::Mapping;
 pub struct Mappings(Vec<Mapping>);
 
 impl Mappings {
-    fn merge_overlapping(&mut self) {
-        self.0.sort_unstable_by_key(|m| m.host_range.start);
-        let mut iter = std::mem::take(&mut self.0).into_iter();
-        let stack = &mut self.0;
+    fn merge_overlapping(self) -> Self {
+        let mut iter = {
+            let mut v = self.0;
+            v.sort_unstable_by_key(|m| m.ct_start);
+            v.into_iter()
+        };
+        let mut stack = Vec::new();
         if let Some(mut last_m) = iter.next() {
             for m in iter {
                 if
+                // is ct_range overlapping?
+                // current mapping's ct_start is always >= to the previous one's since the vector is sorted
+                m.ct_start <= last_m.ct_start + last_m.count &&
                 // is host_range overlapping?
-                m.host_range.start <= last_m.host_range.end &&
-                // is container_range overlapping?
-                m.container_range.start >= last_m.container_range.start &&
-                m.container_range.start <= last_m.container_range.end &&
-                // are overlap start offsets equal between host and container ranges?
-                m.host_range.start - last_m.host_range.start == m.container_range.start - last_m.container_range.start &&
-                // are overlap end offsets equal between host and container ranges?
-                last_m.host_range.end.cmp(&m.host_range.end) == last_m.container_range.end.cmp(&m.container_range.end) &&
-                last_m.host_range.end.abs_diff(m.host_range.end) == last_m.container_range.end.abs_diff(m.container_range.end)
+                m.host_start >= last_m.host_start &&
+                m.host_start <= last_m.host_start + last_m.count
                 {
-                    last_m.host_range.end = last_m.host_range.end.max(m.host_range.end);
-                    last_m.container_range.end =
-                        last_m.container_range.end.max(m.container_range.end);
+                    // mappings are overlapping
+                    let ct_end = (last_m.ct_start + last_m.count).max(m.ct_start + m.count);
+                    last_m.count = ct_end - last_m.ct_start;
                 } else {
+                    // mappings are not overlapping
                     stack.push(last_m);
                     last_m = m;
                 }
             }
             stack.push(last_m);
         }
+        Mappings(stack)
     }
 }
 
@@ -49,9 +50,8 @@ impl Deref for Mappings {
 
 impl From<Vec<Mapping>> for Mappings {
     fn from(value: Vec<Mapping>) -> Self {
-        let mut result = Self(value);
-        result.merge_overlapping();
-        result
+        let result = Self(value);
+        result.merge_overlapping()
     }
 }
 
@@ -90,11 +90,8 @@ mod tests {
             Mappings::from(["1000", "1005-1011:1105-1111"].as_slice())
         );
         assert_eq!(
-            Mappings::from(["1000-1100", "900-1000:800-1000"].as_slice()).0,
-            vec![
-                "900-1000:800-1000".parse::<Mapping>().unwrap(),
-                "1000-1100".parse().unwrap(),
-            ],
+            Mappings::from(["1000-1100", "800-1000:800-1000"].as_slice()).0,
+            vec!["800-1100".parse::<Mapping>().unwrap()],
         );
     }
 }
