@@ -30,20 +30,24 @@ fn main() {
             err.exit();
         }
     };
-    let uid_only_mappings: Mappings = cli.uid_only_mappings.into();
-    let gid_only_mappings: Mappings = cli.gid_only_mappings.into();
-    let mappings: Mappings = cli.mappings.into();
+    let uid_mappings = {
+        let mut m = cli.uid_only_mappings;
+        m.extend(cli.mappings.clone());
+        Mappings::from(m)
+    };
+    let gid_mappings = {
+        let mut m = cli.gid_only_mappings;
+        m.extend(cli.mappings);
+        Mappings::from(m)
+    };
 
     if cli.debug {
         eprintln!("Mappings\n");
-        if !uid_only_mappings.is_empty() {
-            eprintln!("  UID: {}", uid_only_mappings);
+        if !uid_mappings.is_empty() {
+            eprintln!("  UID: {}", uid_mappings);
         }
-        if !gid_only_mappings.is_empty() {
-            eprintln!("  GID: {}", gid_only_mappings);
-        }
-        if !mappings.is_empty() {
-            eprintln!("  UID/GID: {}", mappings);
+        if !gid_mappings.is_empty() {
+            eprintln!("  GID: {}", gid_mappings);
         }
     }
 }
