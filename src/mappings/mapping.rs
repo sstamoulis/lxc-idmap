@@ -20,8 +20,11 @@ impl std::fmt::Display for Mapping {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.ct_start)?;
         if self.count > 1 {
-            write!(f, "-{}", self.ct_start + self.count - 1)?;
+            write!(f, "-{}", self.ct_end() - 1)?;
         }
-        write!(f, ":{}", self.host_start)
+        if self.ct_start != self.host_start {
+            write!(f, ":{}", self.host_start)?;
+        }
+        Ok(())
     }
 }
